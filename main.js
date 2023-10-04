@@ -71,12 +71,14 @@ function checkWin() {
 }
 
 function checkHoles() {
+  let inHole = false
   game.holes.forEach((hole) => {
     if (player_pos.x === hole.x && player_pos.y === hole.y) {
-      return true
+      inHole = true;
+      return;
     }
   })
-  return false
+  return inHole
 }
 
 function move(data) {
@@ -93,6 +95,7 @@ function move(data) {
   }
   if (checkHoles()) {
     console.log("You lose!")
+    return
   }
   game.field[player_pos.x][player_pos.y] = pathCharacter;
   console.log(player_pos);
