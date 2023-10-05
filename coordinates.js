@@ -11,11 +11,20 @@ function getDist(a, b) {
 	return Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2))
 }
 
+function flipCoord(c) {
+	return { x: c.x * -1, y: c.y * -1 }
+}
+
 function areEqual(a, b) {
 	return a.x === b.x && a.y === b.y
 }
 
+function addCoord(a, b) {
+	return { x: a.x + b.x, y: a.y + b.y }
+}
+
 module.exports.getDist = getDist
 module.exports.areEqual = areEqual
+module.exports.addCoord = addCoord
 
 module.exports.randCoordinates = getRandomCoordinates
