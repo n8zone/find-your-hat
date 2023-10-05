@@ -12,7 +12,9 @@ function getDist(a, b) {
 }
 
 function flipCoord(c) {
-	return { x: c.x * -1, y: c.y * -1 }
+	nx = c.x !== 0 ? c.x * -1 : 0;
+	ny = c.y !== 0 ? c.y * -1 : 0;
+	return { x: nx, y: ny }
 }
 
 function areEqual(a, b) {
@@ -26,5 +28,6 @@ function addCoord(a, b) {
 module.exports.getDist = getDist
 module.exports.areEqual = areEqual
 module.exports.addCoord = addCoord
+module.exports.flipCoord = flipCoord
 
 module.exports.randCoordinates = getRandomCoordinates

@@ -1,4 +1,4 @@
-const { getDist, randCoordinates, areEqual, addCoord } = require('./coordinates')
+const { getDist, randCoordinates, areEqual, addCoord, flipCoord } = require('./coordinates')
 const randomChoice = require('./rand')
 const prompt = require('prompt-sync')({sigint: true});
 
@@ -9,6 +9,13 @@ const pathCharacter = '*';
 
 class Field {
 	constructor(w, h) {
+		 this.directions = [
+			{x: -1, y: 0},
+			{x: 1, y : 0},
+			{x: 0, y: -1},
+			{x: 0, y: 1}
+		]
+
 		this.w = w;
 		this.h = h;
 
@@ -71,14 +78,8 @@ class Field {
 	}
 	canMove(check) {
 		let reachable = false
-		let directions = [
-			{ x: -1, y: 0 },
-			{ x: 1, y: 0 },
-			{ x: 0, y: -1 },
-			{ x: 0, y: 1 }
-		]
 		
-		directions.forEach((dir) => {
+		this.directions.forEach((dir) => {
 			const newPos = addCoord(check, dir);
 			if ((newPos.x < 0 || newPos.x >= this.w) || (newPos.y < 0 || newPos.y > this.h)) {
 				return;
@@ -92,19 +93,21 @@ class Field {
 			} catch {
 				return
 			}
-
-
 		})
 
 		return reachable
 		
 	}
-	isSolvable(cycles = 0, remainingDirections = ['l','r','u','d'], pointer_pos = {x: 0, y: 0}) {
+	isSolvable(cycles = 0, remainingDirections = this.directions, pointer_pos = {x: 0, y: 0}) {
 		// known issues
 		// 1. Right now if the player is initially trapped in a little box it'll jump around the safe areas until algo reaches cycle limit
-		console.log(cycles)
-		if (cycles > 5000 || remainingDirections.length === 0) { // If it's exhausted all directions, its also not solvable
+		if (cycles > 5000) { // If it's exhausted all directions, its also not solvable
 			console.error("Maze could not be solved in time limit!")
+			return false
+		}
+
+		if (remainingDirections.length === 0) {
+			console.error("Ran out of directions!")
 			return false
 		}
 
@@ -113,47 +116,35 @@ class Field {
 			return false
 		}
 
-		// const DIRECTIONS = {
-		// 	'l': [-1, 0],
-		// 	'r': [1, 0],
-		// 	'u': [0, -1],
-		// 	'd': [0, 1]
-		// }
-
-		const DIRECTIONS = [
-			{x: -1, y: 0},
-			{x: 1, y : 0},
-			{x: 0, y: -1},
-			{x: 0, y: 1}
-		]
-		
-
 		let next_dir = randomChoice(remainingDirections)
-		const next_directions = remainingDirections.filter(d => d !== next_dir) // remove next direction from the choices for next cycle ...
-		
-		next_dir = DIRECTIONS[next_dir]
-	
-		const next_pos = {
-			x: pointer_pos.x + next_dir[0],
-			y: pointer_pos.y + next_dir[1]
-		}
+		const next_directions = remainingDirections.filter(d => !areEqual(d, next_dir)) // remove next direction from the choices for next cycle ...
+		const next_pos = addCoord(pointer_pos, next_dir)
+		console.log("cur pos")
+		console.log(pointer_pos)
+		console.log("next pos")
+		console.log(next_pos)
+		console.log("next dir")
+		console.log(next_dir)
+		console.log("next arr")
+		console.log(next_directions)
+		console.log(`---${cycles}---`)
 
 		if (next_pos.x < 0) {
-			next_pos.x = 0;
-			return this.isSolvable(cycles, next_directions, pointer_pos)
+			console.log("OOB")
+			return this.isSolvable(++cycles, next_directions, pointer_pos)
 		}
 		else if (next_pos.x >= this.w) {
-			next_pos.x = this.w - 1;
-			return this.isSolvable(cycles, next_directions, pointer_pos)
+			console.log("OOB")
+			return this.isSolvable(++cycles, next_directions, pointer_pos)
 		}
 
 		if (next_pos.y < 0) {
-			next_pos.y = 0;
-			return this.isSolvable(cycles, next_directions, pointer_pos)
+			console.log("OOB")
+			return this.isSolvable(++cycles, next_directions, pointer_pos)
 		}
 		else if (next_pos.y >= this.w) {
-			next_pos.y = this.w - 1;
-			return this.isSolvable(cycles, next_directions, pointer_pos)
+			console.log("OOB")
+			return this.isSolvable(++cycles, next_directions, pointer_pos)
 		}
 
 		if (this.isHole(next_pos)) {
@@ -161,7 +152,8 @@ class Field {
 			return this.isSolvable(++cycles, next_directions, pointer_pos)
 		}
 
-		if (areEqual(next_pos, pointer_pos)) {
+		if (areEqual(next_pos, pointer_pos)) { // What? This will never happen!
+			console.log("???")
 			return this.isSolvable(++cycles, next_directions, pointer_pos)
 		}
 
@@ -170,17 +162,14 @@ class Field {
 			return true;
 		}
 		console.log("safe!")
-		remainingDirections = ['l','r','u','d']
-		remainingDirections.filter((d) => { // this should filter out the opposite direction, not the one we just used.
-			return d !== next_dir
-		})
-		return this.isSolvable(cycles, remainingDirections, next_pos)
+		remainingDirections = this.directions
+		return this.isSolvable(++cycles, remainingDirections, next_pos)
 
 	}
 }
 
-const GRID_X = 16
-const GRID_Y = 16
+const GRID_X = 4
+const GRID_Y = 4
 
 let player_pos = { x: 0, y: 0 }
 
